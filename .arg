@@ -1,0 +1,3 @@
+DOCKERHUB_USER=earthly
+IMAGE_NAME=dind
+EARTHLY_REPO_VERSION=ido-dind-preparations
