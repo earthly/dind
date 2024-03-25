@@ -1,0 +1,130 @@
+VERSION --build-auto-skip 0.8
+PROJECT earthly-technologies/core
+
+FROM alpine
+
+# EARTHLY_REPO_VERSION specifies a branch and/or commit of earthly/earthly (it defaults to the earthly cli version if left empty)
+ARG EARTHLY_REPO_VERSION
+
+IMPORT github.com/earthly/earthly/buildkitd:$EARTHLY_REPO_VERSION AS earthly
+IMPORT github.com/earthly/earthly/tests/with-docker:$EARTHLY_REPO_VERSION AS with-docker
+IMPORT github.com/earthly/earthly/tests/with-docker-kind:$EARTHLY_REPO_VERSION AS with-docker-kind
+
+# DOCKERHUB_USER is the organization name in docker hub (default: earthly)
+ARG --global DOCKERHUB_USER
+# IMAGE_NAME is the image repository in docker hub (default: dind)
+ARG --global IMAGE_NAME
+
+# build builds both the alpine and ubuntu dind images for earthly
+build:
+    # OS_IMAGE is the base image to use, e.g. alpine, ubuntu
+    ARG --required OS_IMAGE
+    # OS_VERSION is the version of the base OS to use, e.g. 3.18.0, 23.04
+    ARG --required OS_VERSION
+    # DOCKER_VERSION is the version of docker to use, e.g. 20.10.14
+    ARG --required DOCKER_VERSION
+    FROM $OS_IMAGE:$OS_VERSION
+    COPY earthly+export-docker-script/docker-auto-install.sh /usr/local/bin/docker-auto-install.sh
+    RUN docker-auto-install.sh
+    LET DOCKER_VERSION_TAG=$DOCKER_VERSION
+    IF [ "$OS_IMAGE" = "alpine" ]
+        RUN apk add iptables-legacy # required for older kernels
+    END
+    # DOCKERHUB_USER is the organization name in docker hub (default: earthly)
+    ARG DOCKERHUB_USER
+    # IMAGE_NAME is the image repository in docker hub (default: dind)
+    ARG IMAGE_NAME
+    COPY --dir --pass-args +get-image-info/image-info .
+    LET image_name=$(cat image-info/name)
+    LET image_tag=$(cat image-info/tag)
+    RUN rm -rf image-info
+    SAVE IMAGE --push --cache-from=$image_name:$OS_IMAGE-main $image_name:$image_tag
+
+# get-image-info generates the image name and tag as a saved artifact so it can be used by multiple targets
+get-image-info:
+    # OS_IMAGE is the base image to use, e.g. alpine, ubuntu
+    ARG --required OS_IMAGE
+    # OS_VERSION is the version of the base OS to use, e.g. 3.18.0, 23.04
+    ARG --required OS_VERSION
+    # DOCKER_VERSION is the version of docker to use, e.g. 20.10.14
+    ARG --required DOCKER_VERSION
+    LET DOCKER_VERSION_TAG=$DOCKER_VERSION
+    IF [ "$OS_IMAGE" = "ubuntu" ]
+        # the docker ce repo contains packages such as "5:24.0.4-1~ubuntu.20.04~focal", we will remove the epoch and debian-revision values,
+        # in order to display the upstream-version, e.g. "24.0.5-1".
+        SET DOCKER_VERSION_TAG="$(echo $DOCKER_VERSION | sed 's/^[0-9]*:\([^~]*\).*$/\1/')"
+        RUN if echo $DOCKER_VERSION_TAG | grep "[^0-9.-]"; then echo "DOCKER_VERSION_TAG looks bad; got $DOCKER_VERSION_TAG" && exit 1; fi
+    END
+    LET TAG=$OS_IMAGE-$OS_VERSION-docker-$DOCKER_VERSION_TAG
+    # DOCKERHUB_USER is the organization name in docker hub (default: earthly)
+    ARG --required DOCKERHUB_USER
+    # IMAGE_NAME is the image repository in docker hub (default: dind)
+    ARG --required IMAGE_NAME
+    LET image_full_name=$DOCKERHUB_USER/$IMAGE_NAME
+    ARG SUFFIX
+    IF [ -n "$SUFFIX" ]
+        SET TAG="$TAG-$SUFFIX"
+    END
+    LET dir=image-info
+    RUN mkdir $dir
+    RUN echo $image_full_name > $dir/name && echo $TAG > $dir/tag
+    SAVE ARTIFACT $dir
+
+# test runs tests against the specified image (DIND_IMAGE) or otherwise uses the image specified in earthly/earthly repo
+test:
+    # DIND_IMAGE is the full docker image name & tag to run the tests against. The image must exist in the remote docker registry
+    ARG DIND_IMAGE
+    BUILD --pass-args with-docker+all --DIND_IMAGE=$DIND_IMAGE
+
+# build-and-test is used to build a new image and run tests against it after pushing it to registry
+# this can be used on either the final image or a test image (which is differentiated by the repo and tag that is used)
+# this target will call +build & +test targets that are defined in $DIR_PATH/Earthfile
+# Note: +test will only run when executing earthly with the --push flag since the tests need to run against the pushed image
+build-and-test:
+    # DIR_PATH needs to match the directory name of the linux distribution of the dind image (alpine, ubuntu-22.04, ...)
+    ARG --required DIR_PATH
+    WAIT
+        # todo: do we need to invlidate cache when date is updated?
+        BUILD --pass-args ../os/$DIR_PATH+build
+    END
+    # run tests using the image that was pushed above (if it was pushed)
+    COPY --dir --pass-args +get-image-info/image-info .
+    LET image_name=$(cat image-info/name)
+    LET image_tag=$(cat image-info/tag)
+    WAIT
+        # EARTHLY_PUSH is a builtin arg that helps determine if the tests should run
+        ARG EARTHLY_PUSH
+        IF [ "$EARTHLY_PUSH" = "true" ]
+            BUILD --pass-args ../os/$DIR_PATH+test --DIND_IMAGE=$image_name:$image_tag
+        END
+    END
+
+# push-new-tag expects to get an image with a tag that contains a date as a suffix, and save the image with the same tag but without the date suffix
+# this is used to "graduate" the image version from a temporary version to an official version.
+push-new-tag:
+    FROM alpine
+    ARG --required TAG_WITH_DATE
+    WAIT
+        IF ! [[ "$TAG_WITH_DATE" =~ "-[0-9]{14}$" ]]
+            RUN --no-cache echo "the specified image tag ($TAG_WITH_DATE) does not have a date suffix" && \
+            exit 1
+        END
+    END
+    FROM $DOCKERHUB_USER/$IMAGE_NAME:$TAG_WITH_DATE
+    LET new_tag="$(echo ${TAG_WITH_DATE%-*})"
+    IF [ "$new_tag" = "$TAG_WITH_DATE" ]
+       RUN --no-cache echo "failed to remove date from tag $TAG_WITH_DATE" && exit 1
+    END
+    SAVE IMAGE --push $DOCKERHUB_USER/$IMAGE_NAME:$new_tag
+
+# push-new-tag-multi-platform builds push-new-tag using both amd64 & arm64 platforms.
+push-new-tag-multi-platform:
+    BUILD --pass-args --platform=linux/amd64 --platform=linux/arm64 +push-new-tag
+
+# alpine-kind-test is a specific test for alpine, we put it in this file consolidate the IMPORT statement in one file
+alpine-kind-test:
+    BUILD --pass-args with-docker-kind+alpine-kind
+
+# ubuntu-kind-test is a specific test for ubuntu, we put it in this file consolidate the IMPORT statement in one file
+ubuntu-kind-test:
+    BUILD --pass-args with-docker-kind+ubuntu-kind

@@ -1,0 +1,102 @@
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  extends: [
+    "config:recommended"
+  ],
+  configMigration: true,
+  prHourlyLimit: 1,
+  schedule: [ // utc timezone
+    'after 6am on monday',
+  ],
+  enabledManagers: [
+    'dockerfile',
+    'custom.regex',
+    'github-actions',
+  ],
+  dockerfile: {
+    fileMatch: [
+      'Earthfile',
+    ],
+  },
+  customManagers: [
+    {
+      // Earthly Version in GH Actions
+      customType: 'regex',
+      fileMatch: [
+        '.*?\\.yml', 
+      ],
+      matchStrings: [
+        '- uses: earthly/actions/setup-earthly@.*?[\\s\\n]+.*?[\\s\\n]+with:[\\s\\n]*version: (?<currentValue>.*?)[\\s\\n/]+',
+      ],
+      depNameTemplate: 'earthly/earthly',
+      datasourceTemplate: 'github-releases',
+    },
+    {
+      // ARG/LET in Earthfile that have a Renovate comment
+      customType: 'regex',
+      fileMatch: [
+        'Earthfile',
+      ],
+      matchStrings: [
+        '\\s*#\\s*renovate:\\s*datasource=(?<datasource>.*?)\\s+depName=(?<depName>.*?)[\\s\\n]+(versioning=(?<versioning>.*?)\\s+)?(ARG|LET)\\s+.*?(_VERSION|_VER|version)=(?<currentValue>.*?)($|\\s|\\n)',
+      ],
+    },
+    {
+      // Updating the Repology alpine version
+      customType: 'regex',
+      fileMatch: [
+        'Earthfile',
+      ],
+      matchStrings: [
+        '# renovate: datasource=repology depName=alpine_(?<currentValue>\\d+_\\d+)',
+      ],
+      currentValueTemplate: "{{{ replace '_' '.' currentValue }}}",
+      datasourceTemplate: 'docker',
+      depNameTemplate: 'alpine',
+      versioningTemplate: 'regex:^(?<major>\\d+)[._](?<minor>\\d+)$',
+      autoReplaceStringTemplate: '# renovate: datasource=repology depName=alpine_{{{newMajor}}}_{{{newMinor}}}',
+    },
+    {
+      // Updating the commit hash of earthly/earthly
+      customType: 'regex',
+      fileMatch: ['^\\.arg$'],
+      matchStrings: [
+        'EARTHLY_REPO_VERSION=(?<currentDigest>.*?)($|\\s|\\n)',
+      ],
+      currentValueTemplate: 'main',
+      depNameTemplate: 'earthly/earthly',
+      packageNameTemplate: 'https://github.com/earthly/earthly',
+      datasourceTemplate: 'git-refs',
+    },
+  ],
+  labels: [
+    'renovate',
+  ],
+  packageRules: [
+    // set the group name for alpine dind dependencies
+    {
+      groupName: "{{{ replace 'os\\/(.*?)$' '$1' packageFileDir}}}-dind-image",
+      matchPackagePatterns: [
+        'alpine',
+        'alpine.*?/docker',
+        'docker/docker',
+      ],
+      matchManagers: [
+        'custom.regex',
+      ],
+      matchDatasources: [
+        'docker',
+        'repology',
+        'github-releases',
+      ],
+      matchFileNames: [
+        'os/**/Earthfile',
+      ],
+    },
+    {
+      // let all package updates auto merge
+      matchPackagePatterns: [ '*' ],
+      automerge: true,
+    },
+  ],
+}
