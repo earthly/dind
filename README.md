@@ -25,8 +25,6 @@ However, the installations of docker and other dependencies are done via an inst
 Dependencies are maintained by Renovate and will be merged automatically (provided required checks pass), primarly
 dependencies that will trigger new versions of the dind images such as the docker or the os (alpine) versions.
 
-
-
 ## Repo structure
 
 ```bash
@@ -63,6 +61,7 @@ earthly --push -P +test
 ```
 
 #### Community members
+
 Community members do not have permissions to push a built image and run the tests against it. However, they can easily set a different dockerhub repository by changing the `DOCKERHUB_USER` ARG value in [.arg](.arg) to a private repository or by passing the arg in the earthly command, e.g. `earthly --push -P +test --DOCKERHUB_USER=<your-user>`.
 
 ## Deployment
