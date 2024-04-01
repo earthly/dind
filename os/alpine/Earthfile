@@ -39,4 +39,5 @@ build:
 # this is primarly used to run against a newly, temporariy image build by +test-build
 test:
     BUILD --pass-args common+alpine-kind-test
+    BUILD --pass-args common+alpine-docker-compose-test
     BUILD --pass-args common+test

@@ -76,7 +76,6 @@ test:
     # DIND_IMAGE is the full docker image name & tag to run the tests against. The image must exist in the remote docker registry
     ARG DIND_IMAGE
     BUILD --pass-args with-docker+all --DIND_IMAGE=$DIND_IMAGE
-    BUILD --pass-args with-docker-compose+all --DIND_IMAGE=$DIND_IMAGE
 
 # build-and-test is used to build a new image and run tests against it after pushing it to registry
 # this can be used on either the final image or a test image (which is differentiated by the repo and tag that is used)
@@ -126,6 +125,9 @@ push-new-tag-multi-platform:
 # alpine-kind-test is a specific test for alpine, we put it in this file consolidate the IMPORT statement in one file
 alpine-kind-test:
     BUILD --pass-args with-docker-kind+alpine-kind
+
+alpine-docker-compose-test:
+    BUILD --pass-args with-docker-compose+all --DIND_IMAGE=$DIND_IMAGE
 
 # ubuntu-kind-test is a specific test for ubuntu, we put it in this file consolidate the IMPORT statement in one file
 ubuntu-kind-test:
