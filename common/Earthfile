@@ -8,6 +8,7 @@ ARG EARTHLY_REPO_VERSION
 
 IMPORT github.com/earthly/earthly/buildkitd:$EARTHLY_REPO_VERSION AS earthly
 IMPORT github.com/earthly/earthly/tests/with-docker:$EARTHLY_REPO_VERSION AS with-docker
+IMPORT github.com/earthly/earthly/tests/with-docker-compose:$EARTHLY_REPO_VERSION AS with-docker-compose
 IMPORT github.com/earthly/earthly/tests/with-docker-kind:$EARTHLY_REPO_VERSION AS with-docker-kind
 
 # DOCKERHUB_USER is the organization name in docker hub (default: earthly)
@@ -75,6 +76,7 @@ test:
     # DIND_IMAGE is the full docker image name & tag to run the tests against. The image must exist in the remote docker registry
     ARG DIND_IMAGE
     BUILD --pass-args with-docker+all --DIND_IMAGE=$DIND_IMAGE
+    BUILD --pass-args with-docker-compose+all --DIND_IMAGE=$DIND_IMAGE
 
 # build-and-test is used to build a new image and run tests against it after pushing it to registry
 # this can be used on either the final image or a test image (which is differentiated by the repo and tag that is used)
