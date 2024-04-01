@@ -127,7 +127,7 @@ alpine-kind-test:
     BUILD --pass-args with-docker-kind+alpine-kind
 
 alpine-docker-compose-test:
-    BUILD --pass-args with-docker-compose+all --DIND_IMAGE=$DIND_IMAGE
+    BUILD --pass-args with-docker-compose+all
 
 # ubuntu-kind-test is a specific test for ubuntu, we put it in this file consolidate the IMPORT statement in one file
 ubuntu-kind-test:
