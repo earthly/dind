@@ -10,7 +10,7 @@ This image supports 3 Linux distributions:
 * ubuntu:23.04
 
 For which the current latest tags (respectively) are:
-* `alpine-3.19-docker-25.0.2-r0`
+* `alpine-3.19-docker-25.0.3-r1`
 * `ubuntu-20.04-docker-26.0.0-1`
 * `ubuntu-23.04-docker-24.0.9-1`
 
