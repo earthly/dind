@@ -11,8 +11,8 @@ This image supports 3 Linux distributions:
 
 For which the current latest tags (respectively) are:
 * `alpine-3.19-docker-25.0.2-r0`
-* `ubuntu-20.04-docker-24.0.5-1`
-* `ubuntu-23.04-docker-24.0.5-1`
+* `ubuntu-20.04-docker-26.0.0-1`
+* `ubuntu-23.04-docker-24.0.9-1`
 
 For other available tags, please check out https://hub.docker.com/r/earthly/dind/tags
 
