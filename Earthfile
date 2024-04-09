@@ -13,6 +13,8 @@ release:
     # RENOVATE_BRANCH is the renovate branch that is expected to get merged and trigger this target
     ARG --required RENOVATE_BRANCH
     LET os=${RENOVATE_BRANCH#renovate/}
+    # remove major-XX- or major-
+    SET os=$(echo ${os#major-[[:digit:]]?-})
     SET os=${os#major-}
     # using a LET/SET in the target path does not work, use an ARG instead until it's fixed
     ARG OS=${os%-dind-image}
