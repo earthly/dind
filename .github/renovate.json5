@@ -133,5 +133,15 @@
       allowedVersions: "/^ubuntu-23\\.04-.*/",
       versioning: "regex:^(?<compatibility>.*)-(?<major>\\d+\\.\\d+)-docker-(?<minor>\\d+)\\.(?<patch>\\d+)\\.(?<build>\\d+)-(?<revision>\\d+)$",
     },
+    {
+      // create PRs for multiple docker versions in case we're more than one major version behind
+      matchPackageNames: [
+        'docker/docker',
+      ],
+      matchDatasources: [
+        'github-releases',
+      ],
+      separateMultipleMajor: true,
+    },
   ],
 }
