@@ -40,6 +40,7 @@ build:
     LET image_name=$(cat image-info/name)
     LET image_tag=$(cat image-info/tag)
     RUN rm -rf image-info
+    ENV OTEL_TRACES_EXPORTER=none # disabled for speed improvement; see https://github.com/earthly/earthly/issues/4066
     SAVE IMAGE --push $image_name:$image_tag
 
 # get-image-info generates the image name and tag as a saved artifact so it can be used by multiple targets
