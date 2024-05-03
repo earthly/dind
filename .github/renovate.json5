@@ -134,7 +134,7 @@
       versioning: "regex:^(?<compatibility>.*)-(?<major>\\d+\\.\\d+)-docker-(?<minor>\\d+)\\.(?<patch>\\d+)\\.(?<build>\\d+)-(?<revision>\\d+)$",
     },
     {
-      // rule to update earthly/dind:ubuntu:23.04-* images
+      // rule to update earthly/dind:ubuntu:24.04-* images
       groupName: 'docs-dind-images',
       matchPackageNames: ['earthly/dind'],
       matchCurrentVersion: "/^ubuntu-24\\.04-.*/",
