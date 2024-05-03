@@ -12,6 +12,7 @@ There are currently 3 supported dind distributions available:
 - `alpine`
 - `ubuntu:20.04`
 - `ubuntu:23.04`
+- `ubuntu:24.04`
 
 Other distributions and/or base images can be used with our [dind+INSTALL](https://docs.earthly.dev/docs/guides/docker-in-earthly#performance) [FUNCTION](https://docs.earthly.dev/docs/guides/functions).
 
@@ -38,6 +39,8 @@ dependencies that will trigger new versions of the dind images such as the docke
     ├── ubuntu-20.04
     │   └── Earthfile
     └── ubuntu-23.04
+        └── Earthfile
+    └── ubuntu-24.04
         └── Earthfile
 ```
 
