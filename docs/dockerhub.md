@@ -12,7 +12,7 @@ This image supports 3 Linux distributions:
 
 For which the current latest tags (respectively) are:
 * `alpine-3.20-docker-26.1.5-r0`
-* `ubuntu-20.04-docker-27.1.1-1`
+* `ubuntu-20.04-docker-27.1.2-1`
 * `ubuntu-23.04-docker-25.0.2-1`
 * `ubuntu-24.04-docker-27.1.1-1`
 
