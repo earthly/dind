@@ -1,11 +1,11 @@
 {
-  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
   extends: [
-    "config:recommended"
+    'config:recommended',
   ],
   configMigration: true,
   prHourlyLimit: 1,
-  schedule: [ // utc timezone
+  schedule: [
     'after 6am on monday',
   ],
   enabledManagers: [
@@ -20,10 +20,9 @@
   },
   customManagers: [
     {
-      // Earthly Version in GH Actions
       customType: 'regex',
       fileMatch: [
-        '.*?\\.yml', 
+        '.*?\\.yml',
       ],
       matchStrings: [
         '- uses: earthly/actions/setup-earthly@.*?[\\s\\n]+.*?[\\s\\n]+with:[\\s\\n]*version: (?<currentValue>.*?)[\\s\\n/]+',
@@ -32,7 +31,6 @@
       datasourceTemplate: 'github-releases',
     },
     {
-      // ARG/LET in Earthfile that have a Renovate comment
       customType: 'regex',
       fileMatch: [
         'Earthfile',
@@ -42,7 +40,6 @@
       ],
     },
     {
-      // Updating the Repology alpine version
       customType: 'regex',
       fileMatch: [
         'Earthfile',
@@ -57,9 +54,10 @@
       autoReplaceStringTemplate: '# renovate: datasource=repology depName=alpine_{{{newMajor}}}_{{{newMinor}}}',
     },
     {
-      // Updating the commit hash of earthly/earthly
       customType: 'regex',
-      fileMatch: ['^\\.arg$'],
+      fileMatch: [
+        '^\\.arg$',
+      ],
       matchStrings: [
         'EARTHLY_REPO_VERSION=(?<currentDigest>.*?)($|\\s|\\n)',
       ],
@@ -84,14 +82,8 @@
     'renovate',
   ],
   packageRules: [
-    // set the group name for alpine dind dependencies
     {
       groupName: "{{{ replace 'os\\/(.*?)$' '$1' packageFileDir}}}-dind-image",
-      matchPackagePatterns: [
-        'alpine',
-        'alpine.*?/docker',
-        'docker/docker',
-      ],
       matchManagers: [
         'custom.regex',
       ],
@@ -103,46 +95,55 @@
       matchFileNames: [
         'os/**/Earthfile',
       ],
+      matchPackageNames: [
+        '/alpine/',
+        '/alpine.*?/docker/',
+        '/docker/docker/',
+      ],
     },
     {
-      // let all package updates auto merge
-      matchPackagePatterns: [ '*' ],
       automerge: true,
+      matchPackageNames: [
+        '*',
+      ],
     },
     {
-      // rule to update earthly/dind:alpine-* images
       groupName: 'docs-dind-images',
-      matchPackageNames: ['earthly/dind'],
-      matchCurrentVersion: "/^alpine-.*/",
-      allowedVersions: "/^alpine-.*/",
-      versioning: "regex:^(?<compatibility>.*)-(?<major>\\d+\\.\\d+)-docker-(?<minor>\\d+)\\.(?<patch>\\d+)\\.(?<build>\\d+)-r(?<revision>\\d+)$",
+      matchPackageNames: [
+        'earthly/dind',
+      ],
+      matchCurrentVersion: '/^alpine-.*/',
+      allowedVersions: '/^alpine-.*/',
+      versioning: 'regex:^(?<compatibility>.*)-(?<major>\\d+\\.\\d+)-docker-(?<minor>\\d+)\\.(?<patch>\\d+)\\.(?<build>\\d+)-r(?<revision>\\d+)$',
     },
     {
-      // rule to update earthly/dind:ubuntu:20.04-* images
       groupName: 'docs-dind-images',
-      matchPackageNames: ['earthly/dind'],
-      matchCurrentVersion: "/^ubuntu-20\\.04-.*/",
-      allowedVersions: "/^ubuntu-20\\.04-.*/",
-      versioning: "regex:^(?<compatibility>.*)-(?<major>\\d+\\.\\d+)-docker-(?<minor>\\d+)\\.(?<patch>\\d+)\\.(?<build>\\d+)-(?<revision>\\d+)$",
+      matchPackageNames: [
+        'earthly/dind',
+      ],
+      matchCurrentVersion: '/^ubuntu-20\\.04-.*/',
+      allowedVersions: '/^ubuntu-20\\.04-.*/',
+      versioning: 'regex:^(?<compatibility>.*)-(?<major>\\d+\\.\\d+)-docker-(?<minor>\\d+)\\.(?<patch>\\d+)\\.(?<build>\\d+)-(?<revision>\\d+)$',
     },
     {
-      // rule to update earthly/dind:ubuntu:23.04-* images
       groupName: 'docs-dind-images',
-      matchPackageNames: ['earthly/dind'],
-      matchCurrentVersion: "/^ubuntu-23\\.04-.*/",
-      allowedVersions: "/^ubuntu-23\\.04-.*/",
-      versioning: "regex:^(?<compatibility>.*)-(?<major>\\d+\\.\\d+)-docker-(?<minor>\\d+)\\.(?<patch>\\d+)\\.(?<build>\\d+)-(?<revision>\\d+)$",
+      matchPackageNames: [
+        'earthly/dind',
+      ],
+      matchCurrentVersion: '/^ubuntu-23\\.04-.*/',
+      allowedVersions: '/^ubuntu-23\\.04-.*/',
+      versioning: 'regex:^(?<compatibility>.*)-(?<major>\\d+\\.\\d+)-docker-(?<minor>\\d+)\\.(?<patch>\\d+)\\.(?<build>\\d+)-(?<revision>\\d+)$',
     },
     {
-      // rule to update earthly/dind:ubuntu:24.04-* images
       groupName: 'docs-dind-images',
-      matchPackageNames: ['earthly/dind'],
-      matchCurrentVersion: "/^ubuntu-24\\.04-.*/",
-      allowedVersions: "/^ubuntu-24\\.04-.*/",
-      versioning: "regex:^(?<compatibility>.*)-(?<major>\\d+\\.\\d+)-docker-(?<minor>\\d+)\\.(?<patch>\\d+)\\.(?<build>\\d+)-(?<revision>\\d+)$",
+      matchPackageNames: [
+        'earthly/dind',
+      ],
+      matchCurrentVersion: '/^ubuntu-24\\.04-.*/',
+      allowedVersions: '/^ubuntu-24\\.04-.*/',
+      versioning: 'regex:^(?<compatibility>.*)-(?<major>\\d+\\.\\d+)-docker-(?<minor>\\d+)\\.(?<patch>\\d+)\\.(?<build>\\d+)-(?<revision>\\d+)$',
     },
     {
-      // create PRs for multiple docker versions in case we're more than one major version behind
       matchPackageNames: [
         'docker/docker',
       ],
